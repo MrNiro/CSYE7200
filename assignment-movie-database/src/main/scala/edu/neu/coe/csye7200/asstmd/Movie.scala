@@ -24,7 +24,9 @@ import scala.util.Try
   * I will suggest you only focus on TO BE IMPLEMENTED fragments in the assignments.
   *
   */
-case class Movie(title: String, format: Format, production: Production, reviews: Reviews, director: Principal, actor1: Principal, actor2: Principal, actor3: Principal, genres: Seq[String], plotKeywords: Seq[String], imdb: String)
+case class Movie(title: String, format: Format, production: Production, reviews: Reviews,
+                 director: Principal, actor1: Principal, actor2: Principal, actor3: Principal,
+                 genres: Seq[String], plotKeywords: Seq[String], imdb: String)
 
 /**
   * The movie format (including language and duration).
@@ -98,7 +100,10 @@ object Movie extends App {
       * @param w a line of input.
       * @return a Try[Movie]
       */
-    def parse(w: String): Try[Movie] = ??? // TO BE IMPLEMENTED
+    def parse(w: String): Try[Movie] = {
+      val ws: Seq[String] = w.split(",")
+      Try(Movie.apply(ws))
+    }
   }
 
   val ingester = new Ingest[Movie]()
@@ -117,12 +122,10 @@ object Movie extends App {
     * @return a list of Strings containing the specified elements in order
     */
   def elements(list: Seq[String], indices: Int*): List[String] = {
-    // Hint: form a new list which is consisted by the elements in list in position indices. Int* means array of Int.
+    // Hint: form a new list which is consisted by the elements in list in position indices.
+    // Int* means array of Int.
     // 6 points
-    val result: Seq[String] =
-    // TO BE IMPLEMENTED
-    ???
-    result.toList
+    (for(pos <- indices; if list(pos) != "") yield list(pos)).toList
   }
 
   /**
@@ -190,7 +193,8 @@ object Principal {
 }
 
 object Rating {
-  // Hint: This regex matches three patterns: (\w*), (-(\d\d)), (\d\d), for example "PG-13", the first one matches "PG", second one "-13", third one "13".
+  // Hint: This regex matches three patterns: (\w*), (-(\d\d)), (\d\d), for example "PG-13",
+  // the first one matches "PG", second one "-13", third one "13".
   private val rRating = """^(\w*)(-(\d\d))?$""".r
 
   /**
@@ -201,8 +205,12 @@ object Rating {
     */
   // Hint: This should similar to apply method in Object Name. The parameter of apply in case match should be same as case class Rating
   // 13 points
-  def apply(s: String): Rating = ??? // TO BE IMPLEMENTED
-
+  def apply(s: String): Rating = (for (ws <- rRating.unapplySeq(s)) yield for (w <- ws) yield Option(w))
+  match {
+    case Some(Seq(Some(code), _, Some(age))) => Rating(code, Some(age.toInt))
+    case Some(Seq(Some(code), None, None)) => Rating(code, None)
+    case x => throw ParseException(s"parse error in Rating: $s (parsed as $x)")
+  }
 }
 
 case class ParseException(w: String) extends Exception(w)
