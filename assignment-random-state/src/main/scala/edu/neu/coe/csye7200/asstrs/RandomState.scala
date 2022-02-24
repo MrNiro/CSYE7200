@@ -38,14 +38,14 @@ trait RandomState[T] {
     */
   // Hint: Think of the input and output, find the appropriate method that achieve this.
   // 10 points
-  def flatMap[U](f: T => RandomState[U]): RandomState[U] = ??? // TO BE IMPLEMENTED
+  def flatMap[U](f: T => RandomState[U]): RandomState[U] = f(this.get)
 
   /**
     * @return a stream of T values
     */
   // Hint: This a recursively method and it concatenate current element with following elements.
   // 12 points
-  def toStream: LazyList[T] = ??? // TO BE IMPLEMENTED
+  def toStream: LazyList[T] = LazyList.cons(this.get, this.next.toStream)
 }
 
 /**
@@ -58,13 +58,13 @@ trait RandomState[T] {
 case class JavaRandomState[T](n: Long, g: Long => T) extends RandomState[T] {
   // Hint: Remember to use the "seed" to generate next RandomState.
   // 7 points
-  def next: RandomState[T] = ??? // TO BE IMPLEMENTED
+  def next: RandomState[T] = JavaRandomState(new Random(n).nextLong(), g)
   // Hint: Think of the input and output.
   // 5 points
-  def get: T = ??? // TO BE IMPLEMENTED
+  def get: T = g(n)
   // Hint: This one need function composition.
   // 13 points
-  def map[U](f: T => U): RandomState[U] = ??? // TO BE IMPLEMENTED
+  def map[U](f: T => U): RandomState[U] = JavaRandomState[U](n, g andThen f)
 }
 
 case class DoubleRandomState(n: Long) extends RandomState[Double] {
@@ -92,9 +92,11 @@ object RandomState {
 
   def apply(): RandomState[Long] = apply(System.currentTimeMillis)
 
-  // Hint: This is a easy one, remember that it not only convert a Long to a Double but also scale down the number to -1 ~ 1.
+  // Hint: This is a easy one, remember that it not only convert a Long to a Double
+  // but also scale down the number to -1 ~ 1.
   // 4 points
-  val longToDouble: Long => Double = ??? // TO BE IMPLEMENTED
+  val longToDouble: Long => Double = { x =>  x.toDouble / Long.MaxValue}
+
   val doubleToUniformDouble: Double => UniformDouble = { x => UniformDouble((x + 1) / 2) }
 }
 
