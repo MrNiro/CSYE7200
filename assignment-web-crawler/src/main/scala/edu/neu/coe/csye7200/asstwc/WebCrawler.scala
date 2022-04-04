@@ -24,7 +24,7 @@ object WebCrawler extends App {
   def wget(u: URL): Future[Seq[URL]] = {
     // Hint: write as a for-comprehension, using the method createURL(Option[URL], String) to get the appropriate URL for relative links
     // 16 points.
-    def getURLs(ns: Node): Seq[Try[URL]] = ??? // TO BE IMPLEMENTED
+    def getURLs(ns: Node): Seq[Try[URL]] = for(anchor <- ns \\ "a") yield createURL(Option(u), anchor \@ "href")
 
     def getLinks(g: String): Try[Seq[URL]] = {
       val ny = HTMLParser.parse(g) recoverWith { case f => Failure(new RuntimeException(s"parse problem with URL $u: $f")) }
@@ -32,21 +32,23 @@ object WebCrawler extends App {
     }
     // Hint: write as a for-comprehension, using getURLContent (above) and getLinks above. You might also need MonadOps.asFuture
     // 9 points.
-    ??? // TO BE IMPLEMENTED
+    for(st <- getURLContent(u); r <- MonadOps.asFuture(getLinks(st))) yield r
   }
 
   def wget(us: Seq[URL]): Future[Seq[Either[Throwable, Seq[URL]]]] = {
     val us2 = us.distinct take 10
     // Hint: Use wget(URL) (above). MonadOps.sequence and Future.sequence are also available to you to use.
     // 15 points. Implement the rest of this, based on us2 instead of us.
-    // TO BE IMPLEMENTED
-    ???
+    Future.sequence( for (u <- us2) yield MonadOps.sequence(wget(u)) )
+//     Future.sequence( us2.map(wget).map(MonadOps.sequence(_)) )
   }
 
   def crawler(depth: Int, us: Seq[URL]): Future[Seq[URL]] = {
     def inner(urls: Seq[URL], depth: Int, accum: Seq[URL]): Future[Seq[URL]] =
       if (depth > 0)
-        for (us <- MonadOps.flattenRecover(wget(urls), { x => System.err.println(s"""crawler: ignoring exception $x ${if (x.getCause != null) " with cause " + x.getCause else ""}""") }); r <- inner(us, depth - 1, accum ++: urls)) yield r
+        for (us <- MonadOps.flattenRecover(wget(urls),
+          { x => System.err.println(s"""crawler: ignoring exception $x ${if (x.getCause != null) " with cause " + x.getCause else ""}""") });
+             r <- inner(us, depth - 1, accum ++: urls)) yield r
       else
         Future.successful(accum)
 

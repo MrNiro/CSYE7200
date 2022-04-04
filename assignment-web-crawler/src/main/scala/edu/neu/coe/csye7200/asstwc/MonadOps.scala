@@ -54,7 +54,8 @@ object MonadOps {
 
   // Hint: write as a for-comprehension, using the method sequence (above).
   // 6 points.
-  def mapFuture[X](xfs: Seq[Future[X]])(implicit executor: ExecutionContext): Seq[Future[Either[Throwable, X]]] = ??? // TO BE IMPLEMENTED
+  def mapFuture[X](xfs: Seq[Future[X]])(implicit executor: ExecutionContext): Seq[Future[Either[Throwable, X]]] =
+    for(xf <- xfs) yield sequence(xf)
 
   /**
     * Sequence the Seq of Try of X into a Try of Seq of X such that if any of the input elements is a Failure,
@@ -89,7 +90,10 @@ object MonadOps {
 
   // Hint: this one is a little more tricky. Remember what I mentioned about Either not being a pure monad -- it needs projecting
   // 7 points.
-  def sequence[X](xe: Either[Throwable, X]): Option[X] = ??? // TO BE IMPLEMENTED
+  def sequence[X](xe: Either[Throwable, X]): Option[X] = xe match {
+    case Left(_) => None
+    case Right(x) => Some(x)
+  }
 
   def zip[A, B](ao: Option[A], bo: Option[B]): Option[(A, B)] = for (a <- ao; b <- bo) yield (a, b)
 

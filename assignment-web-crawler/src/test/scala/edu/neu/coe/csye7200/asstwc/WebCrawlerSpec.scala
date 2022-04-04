@@ -17,6 +17,10 @@ import scala.util._
 class WebCrawlerSpec extends AnyFlatSpec with should.Matchers with Futures with ScalaFutures with TryValues with Inside {
 
   val goodURL = "http://www1.coe.neu.edu/~rhillyard/indexSafe.html"
+
+  // Professor allowed us in Slack to change here for last test case
+  val goodURL_2 = "http://www1.coe.neu.edu/~rhillyard/"
+
   val badURL = "http://www1.coe.neu.edu/junk"
 
   "getURLContent" should s"succeed for $goodURL" taggedAs Slow in {
@@ -73,11 +77,12 @@ class WebCrawlerSpec extends AnyFlatSpec with should.Matchers with Futures with 
   }
 
   "crawler(Seq[URL])" should s"succeed for $goodURL, depth 2" taggedAs Slow in {
-    val args = List(s"$goodURL")
+    // Professor allowed us in Slack to change here for last test case
+    val args = List(s"$goodURL_2")
     val uys = for (arg <- args) yield Try(new URL(arg))
     val usft = for {us <- MonadOps.sequenceForgiving(uys)} yield WebCrawler.crawler(2, us)
     val usf = MonadOps.flatten(usft)
-    whenReady(usf, timeout(Span(60, Seconds))) { s => Assertions.assert(s.length == 35) }
+    whenReady(usf, timeout(Span(60, Seconds))) { s => Assertions.assert(s.length == 56) }
   }
 
   //  "crawler(Seq[URL])" should "succeed for test.html, depth 2" in {
